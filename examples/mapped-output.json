@@ -1,0 +1,41 @@
+{
+  "session": "demo-session",
+  "updatedAt": 1800000060000,
+  "calls": [
+    {
+      "externalId": "demo-session/demo-server/call-001",
+      "serverId": "demo-server",
+      "summary": "Vehicle collision",
+      "details": "Two cars blocking the intersection",
+      "priority": "high",
+      "location": "Main Street [120, -48]",
+      "caller": {
+        "userId": 12,
+        "name": "ExampleCaller"
+      },
+      "createdAt": 1800000000000
+    }
+  ],
+  "units": [
+    {
+      "externalId": "demo-session/demo-server/42",
+      "serverId": "demo-server",
+      "robloxUserId": 42,
+      "name": "ExampleOfficer",
+      "callsign": "A-12",
+      "status": "panic",
+      "lastSeen": 1800000060000
+    }
+  ],
+  "panics": [
+    {
+      "externalId": "demo-session/demo-server/panic-001",
+      "serverId": "demo-server",
+      "robloxUserId": 42,
+      "name": "ExampleOfficer",
+      "callsign": "A-12",
+      "location": "Main Street [120, -48]",
+      "createdAt": 1800000040000
+    }
+  ]
+}
