@@ -1,2 +1,2 @@
 # rbx-cad-bridge
-server auth roblox bridge to a private NYSP Cad, /911 calls, panic button, - all pulled from in game, unit duty sync and dispatcher assignments, with rate limiting, retries, an offline outbox and a unit tested backend/core
+rbx-cad-bridge is a Luau library that connects a Roblox game to a private NYSP CAD. (Created by flshmodls) Players dial /911, officers go on duty by joining a team, and a panic button alerts every on-duty unit instantly. (All done in CAD.) When a dispatcher assigns an officer to a call, they’re notified in game. game server is the only thing that talks to the database. It validates and rate-limits every request, retries failures with backoff, and queues writes if the backend is down. 
