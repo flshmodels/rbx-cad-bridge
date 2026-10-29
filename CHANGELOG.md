@@ -1,11 +1,11 @@
 # Changelog
 
-## 0.2.0 — Electron integration
+## 0.3.0 — CAD starter project
 
-- Replace the Firebase transport with a session- and game-server-scoped relay.
-- Display Roblox 911 calls, game units, and panic alerts in the existing CAD Calls view.
-- Follow the CAD selected session and login/access state over read-only IPC.
-- Add file-backed relay storage, separate game-write and CAD-read tokens, schema checks, and integration tests.
-- Document every public command, endpoint, configuration value, and return shape.
+- Remove the application-specific Electron adapter, UI patcher, and third-party session IDs.
+- Use an arbitrary demo-session routing key and fictional event fixtures.
+- Add an offline example, backend snapshot reader, and pure CAD field mapper.
+- Document the transport contract, adaptation seams, inputs/outputs, trust boundaries, and verification limits.
+- Keep the server-side validation, rate limits, retries, outbox, reference receiver, and protocol tests.
 
-This release targets the NYSP-MDT testing#1 build reviewed at fef28ab. Roblox and Electron end-to-end tests remain manual; see docs/VERIFICATION.md.
+This is a reusable reference implementation. Connecting a real CAD still requires its own adapter and integration tests.

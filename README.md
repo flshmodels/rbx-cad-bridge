@@ -1,101 +1,98 @@
 # rbx-cad-bridge
 
-Bring Roblox 911 calls, on-duty units, and panic alerts into the NYSP-MDT Electron CAD.
+A reference implementation for moving Roblox game data into a computer-aided dispatch (CAD) system. Use it as a starter project or study the parts you need.
 
-The game validates and sends events to a small relay. The desktop app reads those events and displays them in its existing **Calls** view. Data stays separated by patrol session and Roblox server. There are no CAD-to-game commands in this version.
+Players submit 911 calls, duty teams create unit-presence updates, and on-duty players can trigger a panic alert. The Roblox server validates these events and sends them to an HTTP receiver. An example CAD reader maps the receiver's snapshot into a simple CAD-shaped data model.
 
 ```text
-Roblox players → Roblox server → HTTPS relay → Electron main process → CAD Calls view
+Roblox client → Roblox server → HTTPS receiver → your CAD backend → your CAD UI
 ```
 
-This version targets the NYSP-MDT testing#1 build reviewed at commit fef28ab. It replaces the original Firebase assumptions. The CAD remains a desktop application; the relay is a transport service it connects to.
+This project does not depend on a specific CAD product, desktop framework, database vendor, or Discord server. It demonstrates a one-way data feed. It is not a universal plug-in for every CAD: you implement the final adapter for your target system.
 
-## Included
+## Try the example without Roblox
 
-- Server-side validation, Roblox text filtering, and per-player rate limits.
-- Retried event delivery and a bounded in-memory outbox during brief outages.
-- Separate write credentials for the game and read-only credentials for the CAD.
-- A dependency-free Node relay with file-backed storage.
-- An Electron adapter and a React feed inserted into the existing Calls screen.
-- Node integration tests and the existing Luau core tests.
+Node 20 or later is enough. There are no npm dependencies to install.
 
-## Setup
+```sh
+npm run demo
+```
 
-### 1. Configure the relay
+This reads fictional events from examples/snapshot.json, maps them with examples/map-to-cad.cjs, and prints JSON. It makes no network calls and writes nothing to a CAD. Compare [the input format](docs/SCHEMA.md) with [the adapter outputs](docs/ADAPTING.md).
 
-Use Node 20 or later. No npm packages are required. Generate two different random tokens for each session; each must have at least 32 characters. This prints a fresh token:
+## What's included
 
-```text
+| Part | What it demonstrates |
+| --- | --- |
+| Roblox services | Server-owned identity/location, input validation, text filtering, duty checks |
+| RelayTransport | Authenticated HTTP, request budgeting, retries with backoff |
+| Outbox | Bounded temporary delivery queue during an outage |
+| Node receiver | Session/server separation, role tokens, schema validation, timestamp handling, file-backed storage |
+| CAD reader | Backend-only snapshot reads with read-only credentials |
+| Example mapper | Translating canonical events into your CAD's field names |
+| Tests | Delivery, duplicates, access boundaries, retention, persistence, and mapping |
+
+## Use it in your project
+
+1. Choose a session key such as demo-session. This is your own routing label, not a third-party account/channel ID.
+2. Configure and host the receiver behind public HTTPS. See [configuration](docs/INPUTS-OUTPUTS.md). The provided Node receiver is one example; your existing CAD backend can implement the same contract.
+3. Configure src/server/Config.luau, create the ignored server-only Secrets.luau, and use your game's actual team names. Start with dryRun enabled.
+4. Connect the CAD backend using examples/relay-client.cjs. Adapt examples/map-to-cad.cjs and upsert the mapped records into your CAD or application state.
+5. Test call delivery, duty changes, panic alerts, outages, and duplicate handling in a published test game before relying on the feed.
+
+The [adaptation guide](docs/ADAPTING.md) explains these seams for web, Electron, and other CAD implementations. [Inputs/outputs](docs/INPUTS-OUTPUTS.md) lists the commands, routes, configuration values, and return shapes.
+
+## Start the example receiver
+
+Generate two separate random tokens, at least 32 characters each:
+
+```sh
 node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"
 ```
 
-In PowerShell, configure a session and start the relay:
+PowerShell example (replace both placeholders):
 
-```text
-$env:CAD_BRIDGE_SESSIONS = '{"1011898104670330920":{"gameToken":"YOUR_UNIQUE_GAME_TOKEN_AT_LEAST_32_CHARS","cadToken":"YOUR_DIFFERENT_CAD_TOKEN_AT_LEAST_32_CHARS"}}'
+```powershell
+$env:CAD_BRIDGE_SESSIONS = '{"demo-session":{"gameToken":"YOUR_UNIQUE_GAME_TOKEN_AT_LEAST_32_CHARS","cadToken":"YOUR_DIFFERENT_CAD_TOKEN_AT_LEAST_32_CHARS"}}'
 npm start
 ```
 
-The relay binds to 127.0.0.1:8787 by default. For live games, host it behind HTTPS on a server Roblox can reach. Give its data directory persistent storage. Only one relay process should use a state file. This repository does not deploy a relay or create a public address.
+The receiver binds to 127.0.0.1:8787. That address is useful for local backend tests; a live Roblox server needs a reachable HTTPS endpoint. Deploying that endpoint is outside this example. The default state file is data/state.json; run one receiver process per file.
 
-### 2. Configure Roblox
+To read a live snapshot from a backend/terminal:
 
-In src/server/Config.luau, set relayUrl to the public HTTPS origin and sessionId to the CAD session's Discord channel ID. Copy Secrets.example.luau to Secrets.luau and set authToken to that session's **gameToken**. Set dutyTeams to your actual team names.
-
-Leave dryRun enabled for the first Studio check. It logs requests without sending them. After configuring the live connection, turn dryRun off and enable **Allow HTTP Requests** in the experience settings.
-
-With Rojo already installed, build a test place:
-
-```text
-rojo build -o CadBridge.rbxl default.project.json
+```powershell
+$env:CAD_RELAY_URL = 'https://relay.example.com'
+$env:CAD_SESSION_ID = 'demo-session'
+$env:CAD_READ_TOKEN = 'YOUR_DIFFERENT_CAD_TOKEN_AT_LEAST_32_CHARS'
+npm run read:snapshot
 ```
 
-Use rojo serve to sync into an existing game instead of replacing its place. This is a game integration, not a Studio plugin.
+## Roblox setup
 
-### 3. Update the Electron CAD
-
-See [Electron installation](docs/ELECTRON.md). The preparation script produces changed CAD files in a new folder and leaves the installed app untouched. Both the local Electron shell and the GitHub-served index.html need an update.
-
-The feed appears at the top of **Calls**, using the CAD's selected and authorized session. Calls from Discord continue to appear in their existing list below it.
-
-## Player inputs
+With Rojo available, build a test place using rojo build -o CadBridge.rbxl default.project.json, or use rojo serve to sync into an existing game. This is game-side code, not a Studio plugin. Enable Allow HTTP Requests before live use.
 
 ```text
 /911 [!low|!medium|!high|!emergency] <incident> | <details>
-/911 !high Vehicle collision | Two cars at the intersection
+/911 !high Vehicle collision | Two cars blocking an intersection
 /panic
 ```
 
-/911 sends a filtered incident, caller identity, and game-derived location. /panic requires a duty team, sends a panic alert, and preserves the existing in-game unit notification. Joining/leaving a duty team updates the imported unit list. See [inputs and outputs](docs/INPUTS-OUTPUTS.md) for every field and return shape.
+## Tests and honest limits
 
-## Verification
-
-```text
+```sh
 npm test
 lune run tests/run
 ```
 
-Node tests cover actual local HTTP traffic, the read-only CAD contract, session/server boundaries, event replay, heartbeat expiry, storage recovery, and Electron IPC access checks with mocked Electron objects. Luau tests require Lune. [Verification notes](docs/VERIFICATION.md) distinguish checks run during this update from pending checks.
+Node checks run with the built-in test runner. Luau checks need Lune; the workflow also includes Roblox lint/build/type checks. See [verification](docs/VERIFICATION.md) for what was actually run.
 
-## Limits
+- No universal CAD connector or production hosting is included. The adapter is the code you customize.
+- The example reader runs once. Your backend chooses its refresh interval and how to display or store results.
+- The game outbox is memory-only: pending events can be lost on shutdown, expiry, or overflow. Relay acceptance does not confirm CAD ingestion or dispatcher acknowledgement.
+- Calls expire after 24 hours; panic records after 5 minutes. Units appear offline after 150 seconds without updates and expire after 24 hours.
+- Capacity limits are intentionally small: 64 server namespaces, 500 calls/units and 100 panics per namespace. The receiver rejects new records when full rather than silently discarding them.
+- Credentials use a shared service-token model suitable for a controlled reference setup. Production account authorization and distributed storage need additional design. See [security](docs/SECURITY.md).
+- Live Roblox behavior has not been verified in this update.
 
-- Roblox/Studio and the installed Electron app have not been tested together in this update.
-- The feed refreshes every 5 seconds while the Calls view is open. No background desktop alert or Discord message is generated by the feed.
-- Calls remain visible for 24 hours; panic alerts for 5 minutes. Units become offline after 150 seconds without a heartbeat and expire after 24 hours. A panic unit status remains until the game changes it, such as by leaving/rejoining duty.
-- The Roblox outbox is memory-only: pending events can be lost on shutdown, expiry, or queue overflow. A successful game notification means the relay accepted the event; it does not prove a dispatcher saw it.
-- Relay limits: 64 active server namespaces, 500 calls/units and 100 panics per namespace, 64 KiB per request, 1000 requests/minute per session and role. Expired entries are removed before writes. A full collection rejects new records; it does not silently discard them.
-- Session credentials are shared service credentials for a private community. Anyone controlling an authorized desktop can extract its CAD token. They are not a replacement for account-based backend authorization.
-
-## Repository layout
-
-| Folder | Purpose |
-| --- | --- |
-| src/ | Roblox game code |
-| relay/ | HTTP ingestion and snapshot service |
-| electron/ | Desktop adapter and Calls-view component |
-| tools/ | Script that prepares the existing CAD update |
-| tests-node/ | Node relay and IPC tests |
-| tests/ | Luau core tests |
-| docs/ | Architecture, schema, installation, configuration, verification |
-
-MIT license. Do not commit live tokens, private settings, or relay data.
+MIT license. Examples use fictional data. Keep real credentials and private deployment files out of Git.
