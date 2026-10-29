@@ -6,7 +6,7 @@ const os = require('node:os');
 const path = require('node:path');
 const { once } = require('node:events');
 const { createRelay } = require('../relay/server.cjs');
-const { createClient, validateConfig } = require('../electron/relay-client.cjs');
+const { createClient, validateConfig } = require('../examples/relay-client.cjs');
 const credentials = {
   session1: { gameToken: 'game1_'.repeat(8), cadToken: 'cad1_'.repeat(8) },
   session2: { gameToken: 'game2_'.repeat(8), cadToken: 'cad2_'.repeat(8) }
@@ -33,7 +33,7 @@ async function fixture(t, options = {}) {
   return { origin, request, snapshot, base, advance: ms => { now += ms; } };
 }
 
-test('game call/unit writes are readable through the Electron client', async t => {
+test('game call/unit writes are readable through an independent CAD reader', async t => {
   const { origin, request, base } = await fixture(t);
   assert.equal((await request(base + 'calls/c1', 'PUT', call)).status, 200);
   assert.equal((await request(base + 'units/42', 'PATCH', unit)).status, 200);
@@ -139,7 +139,7 @@ test('failed storage writes do not commit data in memory', async t => {
   assert.deepEqual((await snapshot()).servers, {});
 });
 
-test('desktop client refuses public cleartext and credential-bearing URLs', () => {
+test('CAD reader refuses public cleartext and credential-bearing URLs', () => {
   assert.throws(() => validateConfig({ relayUrl: 'http://public.example.com', sessions: {} }));
   assert.throws(() => validateConfig({ relayUrl: 'https://user:pass@example.com', sessions: {} }));
   assert.throws(() => validateConfig({ relayUrl: 'https://example.com/path', sessions: {} }));
