@@ -168,7 +168,7 @@ function createRelay({ credentials, stateFile = null, clock = Date.now, onError 
     };
     try {
       const url = new URL(req.url, 'http://relay');
-      if (req.method === 'GET' && url.pathname === '/health') return send(200, { ok: true, version: '0.2.0' });
+      if (req.method === 'GET' && url.pathname === '/health') return send(200, { ok: true, version: '0.3.0' });
       const parts = url.pathname.split('/').slice(1);
       if (parts[0] !== 'v1' || parts[1] !== 'sessions' || !idOK(parts[2])) throw fault(404, 'Not found');
       const session = parts[2];
