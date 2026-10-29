@@ -1,0 +1,18 @@
+# Your real token. Never commit this.
+src/server/Secrets.luau
+
+# Build output / generated
+*.rbxl
+*.rbxlx
+*.rbxm
+sourcemap.json
+roblox.toml
+.DS_Store
+
+node_modules/
+data/
+*.local.json
+.env
+.env.*
+!*.example
+coverage/

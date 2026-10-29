@@ -1,0 +1,7 @@
+{
+  "relayUrl": "https://relay.example.com",
+  "sessions": {
+    "1011898104670330920": "REPLACE_WITH_UNIQUE_CAD_TOKEN_AT_LEAST_32_CHARS",
+    "1390212294478397471": "REPLACE_WITH_ANOTHER_UNIQUE_CAD_TOKEN_32_CHARS"
+  }
+}
