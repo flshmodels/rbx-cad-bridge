@@ -5,7 +5,7 @@
 | Input | Accepted values | Output |
 | --- | --- | --- |
 | /911 incident | 3–80 characters | A pending call using medium priority |
-| /911 !priority incident | details | Priority low/medium/high/emergency; details up to 300 characters | A filtered call in the CAD feed |
+| /911 !priority incident | details | Priority low/medium/high/emergency; details up to 300 characters | A filtered call in the receiver snapshot |
 | /panic | No arguments; player must be on a configured duty team | Panic record, unit panic status, existing in-game alerts |
 | Team membership | Exact names in dutyTeams | Unit available/offline events |
 | CadCallsign attribute | Optional server-set string, up to 50 characters | Unit and panic display label |
@@ -37,7 +37,7 @@ Errors use {error:"message"}. Status codes: 400 invalid input, 401 missing/wrong
 | Setting | Default | Meaning |
 | --- | --- | --- |
 | Config.relayUrl | https://relay.example.com | Public HTTPS origin, no path or explicit port |
-| Config.sessionId | Session 1 channel ID | Routing session; must match CAD config and relay |
+| Config.sessionId | demo-session | Arbitrary routing key; must match reader and receiver |
 | Config.dryRun | true | Log instead of making HTTP requests |
 | Config.paths | calls / units / panics | Canonical collections; leave unchanged |
 | Config.fieldMap | Empty per collection | Reserved adapter mappings; leave empty with this relay |
@@ -53,12 +53,15 @@ Errors use {error:"message"}. Status codes: 400 invalid input, 401 missing/wrong
 | CAD_BRIDGE_SESSIONS | Required JSON | Session ID -> {gameToken,cadToken}; unique tokens >=32 chars |
 | HOST / PORT | 127.0.0.1 / 8787 | Relay listening interface/port |
 | CAD_BRIDGE_STATE | data/state.json | Persistent relay state path |
-| cad-bridge.local.json relayUrl | Required | Relay origin; HTTPS, or HTTP loopback for local tests |
-| cad-bridge.local.json sessions | Required | Session ID -> read-only CAD token |
+| CAD_RELAY_URL | Required for live example | Receiver origin, HTTPS or HTTP loopback for local backend tests |
+| CAD_SESSION_ID | Required for live example | Session key to read |
+| CAD_READ_TOKEN | Required for live example | Read-only token for that session |
 | CAD_BRIDGE_TEST_TMP | System temp directory | Optional test scratch-directory override |
 
-## Electron and internal return shapes
+## Example reader and internal returns
 
-cad-bridge:context is renderer-to-main metadata {session,authenticated}; it carries no token. cad-bridge:snapshot takes no payload and returns the selected session's snapshot, or rejects if the caller, session/access context, configuration, or relay response is invalid. The feed shows connection state, event text, unit status, and timestamps. It clears stale data on failure/session changes.
+createClient({relayUrl,sessions}) returns an async reader. Call reader(session,"snapshot"); it returns the raw snapshot or rejects on configuration/network/HTTP/JSON failure. This is backend code: do not expose its token to a public browser.
 
-RelayTransport.request returns {ok,status,data?,err?,retryable,attempts}. CadClient writes return {ok,queued,err?}. Outbox.flush returns (sent,remaining). These delivery results are internal code contracts, not dispatcher acknowledgements. Schema field definitions are in SCHEMA.md.
+mapToCad(snapshot) returns CAD-shaped arrays without modifying the input; see ADAPTING.md. npm run demo reads the fictional file and prints mapped JSON. npm run read:snapshot reads live environment configuration, fetches once, and prints mapped JSON. Either command exits nonzero on an error. No CAD write occurs.
+
+RelayTransport.request returns {ok,status,data?,err?,retryable,attempts}. CadClient writes return {ok,queued,err?}. Outbox.flush returns (sent,remaining). These delivery results are internal contracts, not CAD/dispatcher acknowledgements. Schema definitions are in SCHEMA.md.

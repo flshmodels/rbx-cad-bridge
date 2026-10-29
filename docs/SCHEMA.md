@@ -27,7 +27,7 @@ Records are nested under a session and game-server namespace. Collection entries
 | status | string | offline, available, busy, en_route, on_scene, or panic |
 | lastSeen | number | Latest game heartbeat or update accepted by the relay |
 
-The bundled game integration sets available on duty, offline on exit, and panic on /panic. Other valid status values are reserved for game-side extensions. No department, shift hours, avatar, vehicle, plate registration, or Discord presence is inferred from a unit record.
+The bundled game integration sets available on duty, offline on exit, and panic on /panic. Other valid status values are reserved for game-side extensions. No department, shift hours, avatar, vehicle, or plate registration is inferred from a unit record. Add explicit fields and validation if your project needs them.
 
 ## Panics
 

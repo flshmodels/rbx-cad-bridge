@@ -1,29 +1,13 @@
-# Verification record
+# Verification
 
-Prepared 2026-10-28 against the local NYSP-MDT testing#1 source reviewed at fef28ab.
+The starter was prepared on 2026-10-29 as a CAD-independent reference project.
 
-## Checked locally
+Result: 17 Node tests passed, the offline demo produced mapped JSON, and all CJS files passed JavaScript syntax checks. Luau and live-game checks below remain pending.
 
-- 15 Node tests passed using actual loopback HTTP traffic and mocked Electron IPC objects.
-- Tests cover game-to-CAD record flow, session/server isolation, read-only CAD credentials, duplicate-event handling, heartbeat staleness, TTL retention, schema checks, persistence reload, failed disk-commit rollback, IPC sender validation, logout/navigation, and in-flight session changes.
-- JavaScript syntax checks run on the relay, Electron modules, preparation script, and prepared main.js.
-- CAD preparation verifies exact integration anchors and writes a source/output hash manifest. It does not change the installed CAD.
+Node tests exercise local HTTP delivery, separate session/server identities, read-only CAD credentials, event replay, heartbeat expiry, retention, persistence reload, failed disk commit rollback, and mapping. Mapper tests also cover identical event IDs across servers, malformed snapshots, optional fields, and the offline CLI example.
 
-## Not verified in this session
+Locally available: Node. Not locally available/on PATH: Lune, Rojo, Selene, StyLua, luau-lsp. No software was downloaded or installed. Node execution does not validate Roblox runtime behavior. The GitHub workflow retains Luau/core and Roblox build checks for environments with those tools.
 
-- Luau/Lune execution, StyLua formatting, Selene lint, luau-lsp analysis, and Rojo build: those tools were not installed/on PATH. No tools were downloaded or installed.
-- Live Roblox game traffic and Roblox TextService/chat/team behavior.
-- Running the updated installed Electron app, visual React rendering, and the complete CAD login-to-feed flow.
-- Public HTTPS relay hosting, availability, or real credentials. No relay was deployed and nothing was pushed to GitHub.
+Pending integration checks: Roblox TextChatService/TextService behavior in a test game, team-change events, live HTTP delivery to public HTTPS, outage/replay tests in a game server, and adapter acceptance tests against a real CAD. No vendor-specific or Electron UI integration is claimed.
 
-## Manual acceptance check
-
-1. Run the Luau checks with the existing toolchain or let GitHub CI run them.
-2. Install the prepared shell/adapter/index into a test copy of the Electron CAD and configure a relay.
-3. Set matching session IDs/tokens in Roblox, relay, and CAD. First confirm dry-run logs, then use a published test server and reachable HTTPS relay.
-4. Send a 911 call, join/leave a duty team, and trigger panic on duty. Confirm the data appears in Calls within a refresh cycle after relay acceptance.
-5. Open another session and confirm the first session's records disappear. Log out and verify the feed is cleared.
-6. Stop the relay: the CAD should clear the feed/show unavailable, while failed Roblox writes queue. Restart before the queue expires and confirm retry delivery.
-7. Restart the relay to confirm accepted events reload from its persistent file. Test heartbeat expiry if a game server exits without its final offline write.
-
-This is a prepared integration, not a claim of live Roblox/Electron compatibility testing.
+Before using the feed: run npm test and the Luau suite; exercise /911, duty changes and /panic in a published test game; verify duplicate upserts and session isolation; stop/restart the receiver and check recovery/stale-state display. Check the retention/queue limits against your requirements.

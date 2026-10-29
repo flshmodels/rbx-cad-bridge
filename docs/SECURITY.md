@@ -1,11 +1,11 @@
-# Access and data handling
+# Security and trust boundaries
 
-Each session has two independent random credentials: gameToken may write validated Roblox events; cadToken may only read that session's snapshot. Authorization uses a bearer header, never a URL query string. A token for one session cannot access another. The relay rejects CAD writes and offers no commands back to Roblox.
+The game server validates RemoteEvent inputs, checks duty membership, derives identity/location, applies per-player limits, and filters player-supplied call text with Roblox TextService. Clients never receive the service token or choose receiver paths.
 
-Keep game tokens under ServerScriptService in ignored Secrets.luau. Keep desktop tokens in ignored cad-bridge.local.json, loaded by Electron's main process. Keep relay credentials in the environment. Do not upload local configs, .env files, or data/state.json. Place editors can read server scripts; people controlling the desktop can recover its token. Use a separate token for every session and role, and rotate compromised credentials.
+Each session has two independent random credentials. gameToken may write validated game events; cadToken may only read that session's snapshot. Tokens for another session are rejected. HTTP authorization uses a bearer header, not a URL query. There are no CAD-write/game-command endpoints.
 
-This is a private-community shared-token model. The CAD's existing login/session check gates its UI, but the relay does not independently authenticate each CAD user. Someone who extracts a CAD token can read that session outside the app. Per-user relay access requires an authenticated backend and short-lived scoped tokens.
+Keep game credentials in ignored Secrets.luau under ServerScriptService and CAD credentials in your backend environment. Keep receiver credentials in its environment. Never bundle tokens in browser assets or share one token among unrelated communities. Place editors and people controlling a credential-bearing backend/desktop can recover those credentials.
 
-The game validates untrusted remote inputs, applies per-player limits, and filters player-supplied call text with Roblox TextService. The relay whitelists record fields, validates paths and user IDs, enforces request/storage limits, and rejects prototype keys. React renders imported strings as text. The Electron snapshot handler validates both the sender window and main frame; it rejects responses from superseded sessions.
+The receiver validates fields/IDs, blocks prototype keys, bounds body and collection sizes, limits requests, and assigns timestamps. Its shared-token authorization identifies a service, not an individual officer. If you deploy it for multiple users, implement account authorization before showing records; consider short-lived scoped service credentials for larger deployments.
 
-Host the relay behind trusted HTTPS. For a proxy on a different machine, configure HOST deliberately and restrict direct HTTP access to the trusted network. Back up and restrict access to the persistent data volume. Run one relay process per state file. Existing CAD security settings are outside this update; this adapter does not imply an audit of the rest of the application.
+Use trusted HTTPS, protect the persistent state volume, and run only one process per state file. For multi-instance hosting, replace the file store with transactional shared storage and preserve idempotency. The example is not a certification or full security audit of a CAD.

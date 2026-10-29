@@ -1,15 +1,13 @@
 # Architecture
 
-Player chat/teams → Roblox services → CadClient → RelayTransport → relay → Electron IPC → RobloxFeed
+Player input → Roblox services → CadClient → RelayTransport → receiver → CAD reader → your adapter
 
-The Roblox server owns the caller identity, unit membership, location, filtering, and event ID. Clients cannot supply a relay route or token. Calls and panics are PUT at stable IDs so transport retries do not create a second event. Unit updates and batched heartbeats use PATCH. Temporary delivery failures enter the bounded Outbox.
+The game server owns caller identity, duty membership, location, text filtering, and event IDs. Calls/panics use PUT at stable IDs so a transport retry does not create duplicate receiver records. Unit updates and batched heartbeats use PATCH. Temporary failures wait in a bounded Outbox.
 
-RelayTransport uses HTTPS with an Authorization bearer header. Routes include both the CAD session and game.JobId. Studio gets a generated server ID when JobId is empty. This keeps two game servers with the same user IDs apart.
+HTTP routes are scoped by a configurable session key and game.JobId. Studio uses a generated ID when JobId is empty. A session can identify a deployment, community, test environment, or gameplay session; it has no built-in dependency on another product's IDs.
 
-The Node relay checks the session token, operation, body shape, and collection limits. It resolves timestamp markers, commits a complete next-state file by temporary-file rename, then acknowledges the write. A failed disk commit leaves the previous in-memory state intact. One process must own the file; this is not distributed storage.
+The Node receiver is a runnable reference backend. It checks role tokens, validates incoming records, resolves timestamp markers, and commits next-state JSON through a temporary-file rename. One process owns the state file. A production backend can replace that implementation while preserving the contract.
 
-The Electron main process reads snapshots using its CAD token. The existing renderer sends only the current session and authentication/access state through cad-bridge:context. Snapshot IPC accepts the primary CAD window's main frame only. Navigation, process loss, logout, and session changes invalidate context. A response that arrives after a context change is discarded.
+examples/relay-client.cjs demonstrates a backend read with a read-only token. examples/map-to-cad.cjs demonstrates field translation without network/database side effects. examples/read-snapshot.cjs connects them or reads the fictional fixture offline. Your application owns scheduling, account authorization, UI, upserts, and historical storage.
 
-RobloxFeed is inserted into the existing Calls view. It requests a snapshot every five seconds, cancels stale results on unmount/session change, and renders record text through React. It does not send actions back to Roblox, write Discord messages, or alter CAD duty/shift records.
-
-The original Diff/Poller utilities and their tests remain available as unused core utilities. No poller or DispatchService starts in the game bootstrap.
+There is no CAD-to-game command channel. Diff/Poller utilities remain from the original core and have tests, but no poller runs in the current game bootstrap.
