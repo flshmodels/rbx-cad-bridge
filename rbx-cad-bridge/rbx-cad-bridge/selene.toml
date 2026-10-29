@@ -1,0 +1,5 @@
+std = "roblox"
+
+[lints]
+# The tests deliberately shadow names inside closures; the bridge code itself is clean.
+shadowing = "warn"
