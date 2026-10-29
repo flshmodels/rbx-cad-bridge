@@ -7,8 +7,8 @@
 return {
 	-- Public HTTPS relay origin. A live Roblox server cannot reach your PC's localhost.
 	relayUrl = "https://relay.example.com",
-	-- The Discord channel ID selected as the patrol session in the Electron CAD.
-	sessionId = "1011898104670330920",
+	-- An arbitrary deployment/session key shared by the game, relay, and CAD reader.
+	sessionId = "demo-session",
 	-- No requests leave Studio while this is true. Turn off only after configuring the relay.
 	dryRun = true,
 
