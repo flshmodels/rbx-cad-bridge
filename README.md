@@ -1,6 +1,6 @@
 # rbx-cad-bridge
 
-Send calls, unit updates and panic alerts from a Roblox game to a computer-aided dispatch (CAD) backend. The examples show how to map that data into your own CAD.
+Send Roblox 911 calls, unit updates and panic alerts to a computer-aided dispatch (CAD) backend. The receiver and sample adapter give you a starting point for connecting your own CAD.
 
 Players submit 911 calls, duty teams create unit-presence updates, and on-duty players can trigger a panic alert. The Roblox server validates these events and sends them to an HTTP receiver. An example CAD reader maps the receiver's snapshot into a simple CAD-shaped data model.
 
@@ -10,7 +10,7 @@ Roblox client → Roblox server → HTTPS receiver → your CAD backend → your
 
 The feed runs one way, from Roblox to your CAD. It is not tied to a particular CAD or desktop framework. You write the final adapter for the system you use.
 
-## Getting started
+## Setup
 
 Node 20 or later is enough. There are no npm dependencies to install.
 
