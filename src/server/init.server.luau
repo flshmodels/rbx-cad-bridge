@@ -1,5 +1,5 @@
 --!strict
--- Roblox game -> HTTPS relay -> Electron CAD. No CAD commands are polled.
+-- Roblox game -> HTTPS receiver -> CAD backend. The feed is one-way.
 
 
 local HttpService = game:GetService("HttpService")
