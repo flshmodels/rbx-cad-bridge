@@ -1,6 +1,6 @@
 # rbx-cad-bridge
 
-A reference implementation for moving Roblox game data into a computer-aided dispatch (CAD) system. Use it as a starter project or study the parts you need.
+Send calls, unit updates and panic alerts from a Roblox game to a computer-aided dispatch (CAD) backend. The examples show how to map that data into your own CAD.
 
 Players submit 911 calls, duty teams create unit-presence updates, and on-duty players can trigger a panic alert. The Roblox server validates these events and sends them to an HTTP receiver. An example CAD reader maps the receiver's snapshot into a simple CAD-shaped data model.
 
@@ -8,9 +8,9 @@ Players submit 911 calls, duty teams create unit-presence updates, and on-duty p
 Roblox client → Roblox server → HTTPS receiver → your CAD backend → your CAD UI
 ```
 
-This project does not depend on a specific CAD product, desktop framework, database vendor, or Discord server. It demonstrates a one-way data feed. It is not a universal plug-in for every CAD: you implement the final adapter for your target system.
+The feed runs one way, from Roblox to your CAD. It is not tied to a particular CAD or desktop framework. You write the final adapter for the system you use.
 
-## Try the example without Roblox
+## Getting started
 
 Node 20 or later is enough. There are no npm dependencies to install.
 
@@ -22,7 +22,7 @@ This reads fictional events from examples/snapshot.json, maps them with examples
 
 ## What's included
 
-| Part | What it demonstrates |
+| Part | Purpose |
 | --- | --- |
 | Roblox services | Server-owned identity/location, input validation, text filtering, duty checks |
 | RelayTransport | Authenticated HTTP, request budgeting, retries with backoff |
@@ -40,7 +40,7 @@ This reads fictional events from examples/snapshot.json, maps them with examples
 4. Connect the CAD backend using examples/relay-client.cjs. Adapt examples/map-to-cad.cjs and upsert the mapped records into your CAD or application state.
 5. Test call delivery, duty changes, panic alerts, outages, and duplicate handling in a published test game before relying on the feed.
 
-The [adaptation guide](docs/ADAPTING.md) explains these seams for web, Electron, and other CAD implementations. [Inputs/outputs](docs/INPUTS-OUTPUTS.md) lists the commands, routes, configuration values, and return shapes.
+The [adaptation guide](docs/ADAPTING.md) explains how to connect web, Electron and other CAD applications. [Inputs/outputs](docs/INPUTS-OUTPUTS.md) lists the commands, routes, configuration values, and return shapes.
 
 ## Start the example receiver
 
@@ -78,7 +78,7 @@ With Rojo available, build a test place using rojo build -o CadBridge.rbxl defau
 /panic
 ```
 
-## Tests and honest limits
+## Tests and limits
 
 ```sh
 npm test
@@ -91,7 +91,7 @@ Node checks run with the built-in test runner. Luau checks need Lune; the workfl
 - The example reader runs once. Your backend chooses its refresh interval and how to display or store results.
 - The game outbox is memory-only: pending events can be lost on shutdown, expiry, or overflow. Relay acceptance does not confirm CAD ingestion or dispatcher acknowledgement.
 - Calls expire after 24 hours; panic records after 5 minutes. Units appear offline after 150 seconds without updates and expire after 24 hours.
-- Capacity limits are intentionally small: 64 server namespaces, 500 calls/units and 100 panics per namespace. The receiver rejects new records when full rather than silently discarding them.
+- Default capacity limits are 64 server namespaces, 500 calls/units and 100 panics per namespace. The receiver rejects new records when full rather than silently discarding them.
 - Credentials use a shared service-token model suitable for a controlled reference setup. Production account authorization and distributed storage need additional design. See [security](docs/SECURITY.md).
 - Live Roblox behavior has not been verified in this update.
 
